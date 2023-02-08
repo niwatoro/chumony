@@ -1,20 +1,16 @@
-import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { ThirdwebProvider } from "@thirdweb-dev/react/solana";
-import { Network } from "@thirdweb-dev/sdk/solana";
-import type { AppProps } from "next/app";
+import { ChainId, ThirdwebProvider } from "@thirdweb-dev/react";
+import { AppType } from "next/app";
 import "../styles/globals.css";
+import AuthProvider from "./components/AuthProvider";
 
-// Change the network to the one you want to use: "mainnet-beta", "testnet", "devnet", "localhost" or your own RPC endpoint
-const network: Network = "mainnet-beta";
-
-function MyApp({ Component, pageProps }: AppProps) {
+const MyApp: AppType = ({ Component, pageProps }): JSX.Element => {
   return (
-    <ThirdwebProvider network={network}>
-      <WalletModalProvider>
+    <ThirdwebProvider desiredChainId={ChainId.Mumbai}>
+      <AuthProvider>
         <Component {...pageProps} />
-      </WalletModalProvider>
+      </AuthProvider>
     </ThirdwebProvider>
   );
-}
+};
 
 export default MyApp;

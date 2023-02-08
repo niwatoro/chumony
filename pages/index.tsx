@@ -1,65 +1,36 @@
+import { useActiveListings, useContract } from "@thirdweb-dev/react";
 import type { NextPage } from "next";
-import dynamic from "next/dynamic";
-import Image from "next/image";
-import styles from "../styles/Home.module.css";
-
-// Default styles that can be overridden by your app
-require("@solana/wallet-adapter-react-ui/styles.css");
-
-const WalletMultiButtonDynamic = dynamic(
-  async () =>
-    (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  { ssr: false }
-);
+import Link from "next/link";
+import Loading from "./components/Loading";
+import NFTCard from "./components/NFTCard";
 
 const Home: NextPage = () => {
-  // Here's how to get the thirdweb SDK instance
-  // const sdk = useSDK();
-  // Here's how to get a nft collection
-  // const { program } = useProgram(
-  //   your_nft_collection_address,
-  //   "nft-collection"
-  // );
+  const { contract } = useContract(process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS, "marketplace");
+  const { data, isLoading, error } = useActiveListings(contract);
+
+  if (isLoading || !data) return <Loading />;
 
   return (
     <>
-      <div className={styles.container}>
-        <div className={styles.iconContainer}>
-          <Image
-            src="/thirdweb.svg"
-            height={75}
-            width={115}
-            style={{
-              objectFit: "contain",
-            }}
-            alt="thirdweb"
-          />
-          <Image
-            width={75}
-            height={75}
-            src="/sol.png"
-            className={styles.icon}
-            alt="sol"
-          />
+      <div className={"space-y-4 p-2"}>
+        <div className={"text-2xl font-semibold"}>Active Listings</div>
+        <div className="flex gap-2">
+          {data &&
+            data.map((nft) => {
+              return (
+                <Link href={`assets/${nft.asset.id}`}>
+                  <NFTCard
+                    nft={{
+                      name: nft.asset.name as string,
+                      tokenUri: nft.asset.image as string,
+                      price: nft.buyoutCurrencyValuePerToken?.displayValue,
+                    }}
+                  />
+                </Link>
+              );
+            })}
         </div>
-        <h1 className={styles.h1}>Solana, meet thirdweb 👋</h1>
-        <p className={styles.explain}>
-          Explore what you can do with thirdweb&rsquo;s brand new{" "}
-          <b>
-            <a
-              href="https://portal.thirdweb.com/solana"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.lightPurple}
-            >
-              Solana SDK
-            </a>
-          </b>
-          .
-        </p>
-
-        <WalletMultiButtonDynamic />
-      </div>
+      </div>{" "}
     </>
   );
 };
