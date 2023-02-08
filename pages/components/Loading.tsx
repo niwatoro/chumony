@@ -1,3 +1,7 @@
 export default function Loading(): React.ReactElement {
-  return <div>Loading...</div>;
+  return (
+    <div>
+      <div>Loading...</div>
+    </div>
+  );
 }

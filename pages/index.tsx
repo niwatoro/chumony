@@ -6,19 +6,19 @@ import NFTCard from "./components/NFTCard";
 
 const Home: NextPage = () => {
   const { contract } = useContract(process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS, "marketplace");
-  const { data, isLoading, error } = useActiveListings(contract);
+  const { data: nfts, isLoading, error } = useActiveListings(contract);
 
-  if (isLoading || !data) return <Loading />;
+  if (isLoading || !nfts) return <Loading />;
 
   return (
     <>
-      <div className={"space-y-4 p-2"}>
+      <div className={"space-y-4 px-8 py-2"}>
         <div className={"text-2xl font-semibold"}>Active Listings</div>
-        <div className="flex gap-2">
-          {data &&
-            data.map((nft, index) => {
+        <div className="flex gap-5">
+          {nfts &&
+            nfts.map((nft, index) => {
               return (
-                <Link key={index} href={`assets/${nft.asset.id}`}>
+                <Link key={index} href={`assets/${nft.id}`}>
                   <NFTCard
                     nft={{
                       name: nft.asset.name as string,
@@ -30,7 +30,7 @@ const Home: NextPage = () => {
               );
             })}
         </div>
-      </div>{" "}
+      </div>
     </>
   );
 };
