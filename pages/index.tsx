@@ -16,9 +16,9 @@ const Home: NextPage = () => {
         <div className={"text-2xl font-semibold"}>Active Listings</div>
         <div className="flex gap-2">
           {data &&
-            data.map((nft) => {
+            data.map((nft, index) => {
               return (
-                <Link href={`assets/${nft.asset.id}`}>
+                <Link key={index} href={`assets/${nft.asset.id}`}>
                   <NFTCard
                     nft={{
                       name: nft.asset.name as string,
