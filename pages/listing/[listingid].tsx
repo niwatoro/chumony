@@ -40,7 +40,7 @@ export default function NFT() {
         <div className={"border-b border-[#e8ebe5] p-3"}>
           <div className={"flex items-center space-x-2 text-sm text-gray-700 md:text-base"}>
             <AiOutlineClockCircle size={24} />
-            <p>Sale ends November 26, 2022 at 7:39pm GMT+11</p>
+            <p>{`Sale ends ${nft.asset.dueDate} (GMT)`}</p>
           </div>
         </div>
         <div className={"flex flex-col gap-y-2 bg-slate-50 p-3"}>

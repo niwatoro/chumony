@@ -8,8 +8,10 @@ const MyApp: AppType = ({ Component, pageProps }): JSX.Element => {
   return (
     <ThirdwebProvider desiredChainId={ChainId.Mumbai}>
       <AuthProvider>
-        <MyHeader />
-        <Component {...pageProps} />
+        <div className="bg-[#FBFBFB] text-[#333] min-h-screen">
+          <MyHeader />
+          <Component {...pageProps} />
+        </div>
       </AuthProvider>
     </ThirdwebProvider>
   );

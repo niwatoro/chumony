@@ -17,8 +17,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     return (
       <div className={"flex h-screen w-screen items-center justify-center"}>
         <div>
-          <h1 className={"text-lg"}>Please login to continue...</h1>
-          <ConnectWallet />
+          <h1 className={"text-lg mb-2"}>Please login to continue...</h1>
+          <ConnectWallet accentColor="#0093AF" colorMode="light" />
         </div>
       </div>
     );
