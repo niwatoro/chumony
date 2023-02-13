@@ -1,10 +1,15 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@thirdweb-dev/contracts/eip/ERC721A.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@thirdweb-dev/contracts/extension/Ownable.sol";
 
-contract Marketplace is ERC721, Ownable {
+contract ChumonMarketplace is ERC721A, Ownable {
+    constructor(string memory _name, string memory _symbol)
+        ERC721A(_name, _symbol)
+    {}
+
     using Counters for Counters.Counter;
 
     struct PlacedOrder {
@@ -24,8 +29,6 @@ contract Marketplace is ERC721, Ownable {
     mapping(uint256 => ReceivedOrder) public receivedOrders;
     Counters.Counter private _receivedOrderIds;
 
-    constructor() ERC721("chumon", "CHMN") {}
-
     event PlaceOrder(uint256 placedOrderId, uint256 reward);
     event ReceiveOrder(
         uint256 receivedOrderId,
@@ -41,7 +44,7 @@ contract Marketplace is ERC721, Ownable {
         string memory description,
         uint256 duration,
         uint256 reward
-    ) public payable {
+    ) public payable returns (uint256) {
         require(
             msg.value == reward,
             "The amount sent must be equal to the reward."
@@ -56,11 +59,17 @@ contract Marketplace is ERC721, Ownable {
             block.timestamp + duration,
             reward
         );
-        _mint(msg.sender, newPlacedOrderId);
+        _safeMint(msg.sender, 1);
         emit PlaceOrder(newPlacedOrderId, reward);
+
+        return newPlacedOrderId;
     }
 
-    function receiveOrder(uint256 placedOrderId) public payable {
+    function receiveOrder(uint256 placedOrderId)
+        public
+        payable
+        returns (uint256)
+    {
         require(
             placedOrders[placedOrderId].reward > 0,
             "This order has already been taken or burned."
@@ -84,6 +93,8 @@ contract Marketplace is ERC721, Ownable {
         );
         _mint(msg.sender, newReceivedOrderId + 2**255);
         emit ReceiveOrder(newReceivedOrderId, placedOrderId, msg.value);
+
+        return newReceivedOrderId;
     }
 
     function approveWithdrawal(uint256 receivedOrderId) public {
@@ -95,7 +106,7 @@ contract Marketplace is ERC721, Ownable {
             "This order has already been taken or burned."
         );
         require(
-            _isApprovedOrOwner(msg.sender, receivedOrderId),
+            _ownershipOf(placedOrderId).addr == msg.sender,
             "Only the owner of the Placed Order NFT can approve the withdrawal."
         );
 
@@ -129,7 +140,6 @@ contract Marketplace is ERC721, Ownable {
         return receivedOrderIds;
     }
 
-    // Function to burn a placed order
     function burnPlacedOrder(uint256 _placedOrderId) public {
         uint256 reward = placedOrders[_placedOrderId].reward;
 
@@ -138,7 +148,7 @@ contract Marketplace is ERC721, Ownable {
             "This order has already been taken or burned."
         );
         require(
-            _isApprovedOrOwner(msg.sender, _placedOrderId),
+            _ownershipOf(_placedOrderId).addr == msg.sender,
             "Only the owner of the Placed Order NFT can burn it."
         );
 
@@ -148,7 +158,6 @@ contract Marketplace is ERC721, Ownable {
         emit BurnPlacedOrder(_placedOrderId, reward);
     }
 
-    // Function to burn a received order
     function burnReceivedOrder(uint256 _receivedOrderId) public {
         uint256 deposit = receivedOrders[_receivedOrderId].deposit;
 
@@ -160,5 +169,56 @@ contract Marketplace is ERC721, Ownable {
         _burn(_receivedOrderId + 2**255);
         payable(msg.sender).transfer(deposit);
         emit BurnReceivedOrder(_receivedOrderId, deposit);
+    }
+
+    function _canSetOwner() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    function placedOrderOfOwnerByIndex(address _owner, uint256 _placedOrderId)
+        public
+        view
+        returns (uint256)
+    {
+        for (uint256 i = 0; i < _placedOrderIds.current(); i++) {
+            if (_ownershipOf(i).addr == _owner) {
+                if (_placedOrderId == 0) {
+                    return i;
+                }
+                _placedOrderId--;
+            }
+        }
+        revert("No placed order found for the given index.");
+    }
+
+    function receivedOrderOfOwnerByIndex(
+        address _owner,
+        uint256 _receivedOrderId
+    ) public view returns (uint256) {
+        for (uint256 i = 0; i < _receivedOrderIds.current(); i++) {
+            if (_ownershipOf(i + 2**255).addr == _owner) {
+                if (_receivedOrderId == 0) {
+                    return i;
+                }
+                _receivedOrderId--;
+            }
+        }
+        revert("No received order found for the given index.");
+    }
+
+    function placedOrdedByIndex(uint256 _placedOrderId)
+        external
+        view
+        returns (uint256)
+    {
+        return placedOrderOfOwnerByIndex(msg.sender, _placedOrderId);
+    }
+
+    function receivedOrdedByIndex(uint256 _receivedOrderId)
+        external
+        view
+        returns (uint256)
+    {
+        return receivedOrderOfOwnerByIndex(msg.sender, _receivedOrderId);
     }
 }
